@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>RG WEALTH - Ultra</title>
+    
+    <link rel="icon" type="image/png" href="assets/icon-1024.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="assets/icon-1024.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class', 
+            theme: {
+                extend: {
+                    colors: {
+                        mintLight: '#f0fdfa', mintMedium: '#ccfbf1',
+                        mintPrimary: '#0d9488', mintDark: '#115e59',    
+                        growth: '#15803d', growthLight: '#dcfce7',
+                        debt: '#6366f1', debtLight: '#e0e7ff',
+                        dream: '#f59e0b', dreamLight: '#fef3c7',
+                        darkBg: '#0f172a', darkCard: '#1e293b', 
+                    },
+                    fontFamily: {
+                        signature: ['Brush Script MT', 'cursive'],
+                        sans: ['Inter', 'sans-serif']
+                    },
+                    animation: {
+                        'blob': 'blob 7s infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="h-screen overflow-hidden text-slate-800 dark:text-slate-100 transition-colors duration-300 selection:bg-mintPrimary selection:text-white">
+
+    <div class="bg-mesh"></div>
+    <div id="toast-container" class="fixed top-5 left-1/2 -translate-x-1/2 z-[250] flex flex-col gap-2 pointer-events-none"></div>
+
+    <div id="loginOverlay" class="fixed inset-0 z-[60] bg-mintLight/50 dark:bg-black/50 backdrop-blur-xl flex items-center justify-center p-6 transition-colors duration-300">
+        <div class="bg-white/80 dark:bg-slate-800/80 p-10 rounded-[32px] shadow-2xl w-full max-w-sm text-center border border-white dark:border-slate-700 relative overflow-hidden backdrop-blur-2xl">
+            <div class="absolute top-0 -left-4 w-32 h-32 bg-teal-200 dark:bg-teal-900 rounded-full mix-blend-multiply dark:mix-blend-overlay filter blur-xl opacity-70 animate-blob"></div>
+            <div class="absolute top-0 -right-4 w-32 h-32 bg-green-200 dark:bg-green-900 rounded-full mix-blend-multiply dark:mix-blend-overlay filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+            
+            <div class="relative z-10">
+                <div class="w-20 h-20 bg-gradient-to-br from-mintPrimary to-mintDark text-white rounded-2xl rotate-3 flex items-center justify-center mx-auto mb-6 text-3xl shadow-lg shadow-mintPrimary/30"><i class="fa-solid fa-wallet"></i></div>
+                <h1 class="text-3xl font-extrabold text-slate-800 dark:text-white mb-1">RG WEALTH</h1>
+                <p class="text-slate-400 mb-8 text-xs uppercase tracking-widest font-bold">Wealth Architect</p>
+
+                <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4 hidden">
+                    <div class="float-label-group">
+                        <input type="password" id="passwordInput" placeholder="PASSWORD" class="text-center text-lg font-bold tracking-widest bg-white/50 dark:bg-slate-900/50 placeholder:text-slate-400/50 placeholder:text-xs placeholder:font-bold" style="padding: 1rem;">
+                    </div>
+                    <button type="submit" class="w-full bg-slate-900 dark:bg-teal-600 hover:bg-slate-800 dark:hover:bg-teal-700 text-white font-bold py-4 rounded-2xl shadow-xl transition-all transform active:scale-95">Unlock</button>
+                    <button type="button" onclick="showRecovery()" class="text-xs font-bold text-slate-400 hover:text-mintPrimary mt-4">Forgot Password?</button>
+                </form>
+
+                <form id="setupForm" onsubmit="handleSetup(event)" class="space-y-4 hidden">
+                    <h3 class="text-sm font-bold text-mintPrimary uppercase tracking-wider mb-2">Setup Your Vault</h3>
+                    <div class="float-label-group">
+                        <input type="password" name="newPass" required placeholder="CREATE PASSWORD" class="text-center text-lg font-bold tracking-widest bg-white/50 dark:bg-slate-900/50" style="padding: 1rem;">
+                    </div>
+                    <div class="float-label-group">
+                        <input type="text" name="recoveryKey" required placeholder="RECOVERY KEY (e.g. Pet Name)" class="text-center text-sm font-bold tracking-wider bg-white/50 dark:bg-slate-900/50" style="padding: 1rem;">
+                    </div>
+                    <p class="text-[10px] text-slate-400 leading-tight">Remember this key! It's the only way to reset your password.</p>
+                    <button type="submit" class="w-full bg-growth dark:bg-green-600 text-white font-bold py-4 rounded-2xl shadow-xl hover:scale-105 transition-transform">Save & Unlock</button>
+                </form>
+
+                <form id="recoveryForm" onsubmit="handleRecovery(event)" class="space-y-4 hidden">
+                    <h3 class="text-sm font-bold text-rose-500 uppercase tracking-wider mb-2">Reset Password</h3>
+                    <div class="float-label-group">
+                        <input type="text" id="recoveryInput" placeholder="ENTER RECOVERY KEY" class="text-center text-lg font-bold tracking-widest bg-white/50 dark:bg-slate-900/50" style="padding: 1rem;">
+                    </div>
+                    <button type="submit" class="w-full bg-rose-500 text-white font-bold py-4 rounded-2xl shadow-xl">Verify & Reset</button>
+                    <button type="button" onclick="initAuth()" class="text-xs font-bold text-slate-400 hover:text-slate-600">Back to Login</button>
+                </form>
+
+                <p id="loginError" class="text-rose-500 text-xs mt-4 hidden font-bold bg-rose-50 dark:bg-rose-900/30 py-2 rounded-xl">Incorrect</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="appLoader" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-mintLight dark:bg-darkBg text-slate-800 dark:text-white hidden transition-opacity duration-700">
+        <div class="relative w-32 h-32 mb-10 flex items-center justify-center">
+             <div class="absolute w-full h-full bg-teal-200 dark:bg-teal-900 rounded-full animate-ping opacity-50"></div>
+             <div class="absolute inset-0 border-4 border-slate-200 dark:border-slate-700 rounded-full"></div>
+             <div class="absolute inset-0 border-t-4 border-mintPrimary border-r-4 border-transparent border-b-4 border-transparent border-l-4 border-transparent rounded-full animate-spin"></div>
+             <div class="relative z-10 w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center border border-slate-100 dark:border-slate-700 shadow-xl"><i class="fa-solid fa-shield-halved text-3xl text-mintPrimary animate-pulse"></i></div>
+        </div>
+        <div class="max-w-xl text-center px-8 relative z-10 space-y-6">
+            <h1 class="text-xl md:text-2xl font-light text-slate-700 dark:text-slate-300 leading-relaxed tracking-wide opacity-0 transform translate-y-4 transition-all duration-1000 ease-out" id="motivationalText">Authenticating...</h1>
+            <div class="w-48 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto overflow-hidden"><div class="h-full bg-gradient-to-r from-teal-400 to-mintPrimary w-0 transition-all duration-[2000ms] ease-out" id="loaderProgress"></div></div>
+            <p class="text-teal-600/60 dark:text-teal-400/60 font-bold tracking-[0.3em] uppercase text-[10px] opacity-0 transition-all duration-1000 delay-300" id="motivationalAuthor">ACCESS GRANTED</p>
+        </div>
+    </div>
+
+    <div class="flex h-full p-0 md:p-6 md:gap-6">
+        
+        <aside id="mainSidebar" class="floating-panel w-72 hidden md:flex flex-col z-20 h-full transition-[width] duration-400 ease-spring">
+            <div class="p-8 pb-4 whitespace-nowrap overflow-hidden flex-shrink-0 flex items-center gap-3 sidebar-header">
+                <div class="w-10 h-10 flex-shrink-0 bg-mintPrimary rounded-xl flex items-center justify-center text-white text-lg shadow-lg shadow-mintPrimary/30"><i class="fa-solid fa-wallet"></i></div>
+                <span id="sidebarLogoText" class="text-2xl font-extrabold text-slate-800 dark:text-white transition-opacity duration-300">RG WEALTH</span>
+            </div>
+            
+            <nav class="flex-1 px-4 space-y-2 overflow-y-auto overflow-x-hidden hide-scrollbar py-2" id="desktopNav"></nav>
+            
+            <div class="p-4 mt-auto whitespace-nowrap overflow-hidden flex flex-col items-center gap-3 border-t border-slate-100 dark:border-slate-700/50">
+                <button onclick="toggleSidebar()" id="sidebarToggle" class="w-full flex items-center justify-center gap-2 p-3 text-slate-400 hover:text-white hover:bg-slate-400 dark:hover:bg-slate-700 rounded-xl transition-all shadow-sm bg-slate-100 dark:bg-slate-800/50 group">
+                    <i class="fa-solid fa-chevron-left transition-transform duration-300"></i> 
+                    <span class="text-xs font-bold uppercase tracking-wider sidebar-text">Collapse Menu</span>
+                </button>
+
+                <input type="file" id="restoreFile" accept=".json" class="hidden" onchange="importData(this)">
+
+                <div class="grid grid-cols-2 gap-2 w-full sidebar-grid">
+                    <button onclick="openCategoryModal()" class="flex flex-col items-center justify-center gap-1 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl hover:bg-mintLight dark:hover:bg-slate-700 transition-colors group">
+                        <i class="fa-solid fa-tags text-slate-400 group-hover:text-mintPrimary transition-colors"></i>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase sidebar-text">Categories</span>
+                    </button>
+                    <button onclick="toggleTheme()" class="flex flex-col items-center justify-center gap-1 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl hover:bg-dreamLight dark:hover:bg-slate-700 transition-colors group">
+                        <i class="fa-solid fa-moon dark:hidden text-slate-400 group-hover:text-amber-500"></i>
+                        <i class="fa-solid fa-sun hidden dark:block text-slate-400 group-hover:text-amber-400"></i>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase sidebar-text">Theme</span>
+                    </button>
+                    <button onclick="exportData()" class="flex flex-col items-center justify-center gap-1 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl hover:bg-indigo-50 dark:hover:bg-slate-700 transition-colors group">
+                        <i class="fa-solid fa-cloud-arrow-down text-slate-400 group-hover:text-indigo-500 transition-colors"></i>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase sidebar-text">Backup</span>
+                    </button>
+                    <button onclick="document.getElementById('restoreFile').click()" class="flex flex-col items-center justify-center gap-1 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl hover:bg-rose-50 dark:hover:bg-slate-700 transition-colors group">
+                        <i class="fa-solid fa-cloud-arrow-up text-slate-400 group-hover:text-rose-500 transition-colors"></i>
+                        <span class="text-[10px] font-bold text-slate-500 uppercase sidebar-text">Restore</span>
+                    </button>
+                </div>
+
+                <button onclick="logout()" class="w-full flex items-center justify-center gap-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 font-bold px-4 py-3 rounded-xl text-xs transition-colors">
+                    <i class="fa-solid fa-power-off"></i> <span class="sidebar-text">Logout</span>
+                </button>
+
+                <div onclick="openModal('creditsModal')" class="px-2 text-center opacity-40 hover:opacity-100 transition-opacity sidebar-text mt-2 cursor-pointer" title="Credits">
+    <p class="text-[9px] text-slate-400 uppercase tracking-widest font-bold mb-0.5">Architect</p>
+    <div class="signature-container"><span class="text-xl font-signature text-mintPrimary">Roushan</span></div>
+</div>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col h-full relative overflow-hidden rounded-none md:rounded-[24px]">
+            
+            <header class="mobile-header-frost h-16 flex items-center px-6 md:hidden flex-shrink-0 sticky top-0 transition-colors duration-300 pointer-events-none">
+    <span class="font-extrabold text-slate-800 dark:text-white text-lg flex items-center gap-2 tracking-wide pointer-events-auto">
+        <i class="fa-solid fa-wallet text-mintPrimary"></i> RG WEALTH
+    </span>
+</header>
+
+            <div class="flex-1 overflow-y-auto px-4 pt-8 pb-4 md:p-8 scroll-smooth hide-scrollbar" id="mainContainer">
+                
+                <div id="page-dashboard" class="page-section max-w-7xl mx-auto space-y-6">
+                    <div class="flex justify-between items-end">
+                        <div><p class="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Total Net Worth</p><h2 class="text-5xl font-extrabold text-slate-900 dark:text-white tracking-tight" id="dashBalance">₹0.00</h2></div>
+                        <button onclick="openAddModal()" class="hidden md:flex bg-slate-900 dark:bg-teal-600 hover:bg-slate-800 text-white px-6 py-3 rounded-2xl font-bold shadow-xl shadow-mintPrimary/20 items-center gap-2 transition-transform hover:scale-105 active:scale-95"><i class="fa-solid fa-plus"></i> Add Transaction</button>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="font-bold text-slate-700 dark:text-white">My Wallets</h3>
+                            <button onclick="openAccountModal()" class="text-xs font-bold text-mintPrimary bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2 rounded-full hover:bg-mintLight transition-colors">Manage</button>
+                        </div>
+                        <div id="accountScroll" class="account-scroll hide-scrollbar -mx-2 px-2"></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      <div class="lg:col-span-2 space-y-6">
+                            <div class="mint-card interactive p-6 cursor-pointer group" onclick="setBudget()">
+                                <div class="flex justify-between items-center mb-6">
+                                    <h3 class="font-bold text-slate-800 dark:text-white group-hover:text-mintPrimary transition-colors">Monthly Budget</h3>
+                                    <button id="budgetTarget" class="font-mono font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 px-3 py-1 rounded-lg text-sm pointer-events-none">₹0</button>
+                                </div>
+                                <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-4 overflow-hidden mb-2">
+                                    <div id="budgetBar" class="h-full bg-gradient-to-r from-teal-400 to-mintPrimary transition-all duration-1000 ease-out" style="width: 0%"></div>
+                                </div>
+                                <p class="text-xs text-slate-400 font-bold text-right" id="budgetText">0% used</p>
+                            </div>
+                            
+                            <div class="flex justify-between items-center"><h3 class="font-bold text-slate-700 dark:text-white">Recent Transactions</h3><button onclick="showPage('analytics')" class="text-xs font-bold text-mintPrimary hover:underline">View All</button></div>
+                            <div id="dashboardRecentTx" class="space-y-3"></div>
+                        </div>
+                        
+                        <div class="space-y-6">
+                            <div class="mint-card p-6 flex flex-col items-center justify-center text-center">
+                                <h3 class="font-bold text-slate-800 dark:text-white mb-4 w-full text-left">Spending</h3>
+                                <div class="h-56 w-full relative flex items-center justify-center"><canvas id="mainChart"></canvas><div id="chartPlaceholder" class="hidden absolute text-slate-400 text-xs font-bold">No Data</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="page-analytics" class="page-section max-w-7xl mx-auto space-y-6 pb-24">
+    
+    <div class="md:mint-card md:p-5 flex flex-col md:flex-row justify-between items-center gap-4 mb-2 md:mb-0">
+        <div class="w-full md:w-auto mb-2 md:mb-0">
+            <p class="md:hidden text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Performance</p>
+            <h2 class="text-3xl md:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight w-full md:w-auto">Analytics</h2>
+        </div>
+        
+        <div class="flex gap-2 w-full md:w-auto p-1.5 bg-white dark:bg-slate-800 md:bg-slate-100 md:dark:bg-slate-700/50 rounded-2xl items-center shadow-sm md:shadow-none border border-slate-100 dark:border-slate-700 md:border-none">
+             
+             <div class="relative group flex-1">
+                <input type="text" id="analyticsStart" class="w-full bg-transparent text-xs font-bold text-center border-none outline-none py-3 md:py-2 rounded-xl text-slate-600 dark:text-slate-200 cursor-pointer placeholder:text-slate-400" placeholder="Start Date">
+             </div>
+             
+             <span class="text-slate-300 dark:text-slate-500 font-bold text-xs flex-shrink-0">to</span>
+             
+             <div class="relative group flex-1">
+                <input type="text" id="analyticsEnd" class="w-full bg-transparent text-xs font-bold text-center border-none outline-none py-3 md:py-2 rounded-xl text-slate-600 dark:text-slate-200 cursor-pointer placeholder:text-slate-400" placeholder="End Date">
+             </div>
+             
+             <button onclick="runAnalytics()" class="bg-slate-900 dark:bg-teal-600 text-white w-10 h-10 md:w-9 md:h-9 rounded-xl flex-shrink-0 flex items-center justify-center shadow-lg hover:scale-105 transition-transform"><i class="fa-solid fa-arrow-right text-xs"></i></button>
+        </div>
+    </div>
+    
+    <div class="flex sliding-tab-container md:hidden mb-6">
+        <div id="analytics-tab-pill" class="sliding-pill"></div>
+        
+        <button onclick="switchAnalyticsTab('bar')" id="tab-btn-bar" class="tab-btn py-2 text-slate-800 dark:text-white">
+            Net Flow
+        </button>
+        <button onclick="switchAnalyticsTab('doughnut')" id="tab-btn-doughnut" class="tab-btn py-2 text-slate-400">
+            Spending
+        </button>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div id="chart-bar-container" class="mint-card p-4 md:p-6 h-80 transition-all duration-300">
+            <canvas id="analyticsBarChart"></canvas>
+        </div>
+        <div id="chart-doughnut-container" class="mint-card p-4 md:p-6 h-80 flex justify-center hidden md:flex">
+            <canvas id="analyticsDoughnutChart"></canvas>
+        </div>
+    </div>
+                    
+                    <div class="md:mint-card md:p-0 md:rounded-[2rem] md:border md:border-white/60 md:shadow-2xl md:shadow-slate-200/50 dark:md:shadow-none overflow-hidden backdrop-blur-2xl">
+
+    <div class="hidden md:flex p-6 border-b border-slate-100 dark:border-slate-700/50 justify-between items-center bg-gradient-to-r from-white/90 to-slate-50/90 dark:from-slate-800/90 dark:to-slate-900/90">
+        <h3 class="font-bold text-slate-800 dark:text-white text-lg flex items-center gap-2">
+            <i class="fa-solid fa-clock-rotate-left text-mintPrimary"></i> Transaction History
+        </h3>
+        <div class="flex gap-2">
+            <button onclick="exportToPDF()" class="text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-rose-600 dark:text-rose-400 px-4 py-2 rounded-xl font-bold hover:bg-rose-50 dark:hover:bg-rose-900/30 transition-colors shadow-sm"><i class="fa-solid fa-file-pdf mr-1"></i> PDF</button>
+            <button onclick="exportToExcel()" class="text-xs bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-emerald-600 dark:text-emerald-400 px-4 py-2 rounded-xl font-bold hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors shadow-sm"><i class="fa-solid fa-file-excel mr-1"></i> Excel</button>
+        </div>
+    </div>
+
+    <div class="flex md:hidden justify-between mb-4 items-center px-2">
+        <h3 class="font-bold text-slate-800 dark:text-white">History</h3>
+        <div class="flex gap-2">
+            <button onclick="exportToPDF()" class="text-xs bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 px-3 py-2 rounded-lg font-bold"><i class="fa-solid fa-file-pdf"></i></button>
+            <button onclick="exportToExcel()" class="text-xs bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 px-3 py-2 rounded-lg font-bold"><i class="fa-solid fa-file-excel"></i></button>
+        </div>
+    </div>
+
+    <div id="analyticsMobileList" class="md:hidden space-y-3 pb-4">
+    </div>
+
+    <div class="hidden md:block overflow-x-auto">
+        <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 font-bold uppercase text-[11px] tracking-wider border-b border-slate-100 dark:border-slate-700">
+                <tr>
+                    <th class="px-8 py-5">Date</th>
+                    <th class="px-6 py-5">Description</th>
+                    <th class="px-6 py-5">Category</th>
+                    <th class="px-8 py-5 text-right">Amount</th>
+                    <th class="px-6 py-5 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody id="analyticsTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
+            </tbody>
+        </table>
+    </div>
+
+    <div id="historyLoadMoreContainer" class="p-6 text-center hidden border-t border-slate-100 dark:border-slate-700/50 bg-white/50 dark:bg-slate-800/30 backdrop-blur-sm">
+        <button onclick="loadMoreAnalytics()" class="px-6 py-3 bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-600 text-slate-500 dark:text-slate-300 rounded-xl font-bold text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-sm">
+            Load More <i class="fa-solid fa-chevron-down ml-1"></i>
+        </button>
+    </div>
+</div>
+</div>
+
+                <div id="page-autopay" class="page-section max-w-7xl mx-auto pb-24"><div class="flex justify-between items-center mb-6"><div><h2 class="text-2xl font-bold">Auto-Pay</h2></div><button onclick="openSubModal()" class="w-12 h-12 rounded-2xl bg-slate-900 dark:bg-teal-600 text-white shadow-lg flex items-center justify-center hover:scale-105 transition-transform"><i class="fa-solid fa-plus"></i></button></div><div id="subGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
+                <div id="page-mutualfunds" class="page-section max-w-7xl mx-auto pb-24"><div class="flex justify-between items-center mb-6"><div><h2 class="text-2xl font-bold">Portfolio</h2></div><button onclick="openSipModal()" class="w-12 h-12 rounded-2xl bg-growth text-white shadow-lg flex items-center justify-center hover:scale-105 transition-transform"><i class="fa-solid fa-plus"></i></button></div><div id="sipGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
+                <div id="page-loans" class="page-section max-w-7xl mx-auto pb-24"><div class="flex justify-between items-center mb-6"><div><h2 class="text-2xl font-bold">Loans</h2></div><button onclick="openLoanModal()" class="w-12 h-12 rounded-2xl bg-debt text-white shadow-lg flex items-center justify-center hover:scale-105 transition-transform"><i class="fa-solid fa-plus"></i></button></div><div id="loanGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
+                <div id="page-dreams" class="page-section max-w-7xl mx-auto pb-24"><div class="flex justify-between items-center mb-6"><div><h2 class="text-2xl font-bold">Dreams</h2></div><button onclick="openDreamModal()" class="w-12 h-12 rounded-2xl bg-dream text-white shadow-lg flex items-center justify-center hover:scale-105 transition-transform"><i class="fa-solid fa-plus"></i></button></div><div id="dreamGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div></div>
+            </div>
+
+            <div class="mobile-nav-island md:hidden">
+    <button onclick="showPage('dashboard')" class="text-slate-400 nav-item" id="mob-nav-dashboard">
+        <i class="fa-solid fa-house text-xl"></i>
+    </button>
+    
+    <button onclick="showPage('analytics')" class="text-slate-400 nav-item" id="mob-nav-analytics">
+        <i class="fa-solid fa-chart-simple text-xl"></i>
+    </button>
+
+    <button onclick="openAddModal()" class="mobile-fab">
+        <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <button onclick="showPage('mutualfunds')" class="text-slate-400 nav-item" id="mob-nav-mutualfunds">
+        <i class="fa-solid fa-chart-line text-xl"></i>
+    </button>
+
+    <button onclick="toggleMobileMenu()" class="text-slate-400 nav-item" id="mob-nav-menu">
+        <i class="fa-solid fa-bars text-xl"></i>
+    </button>
+</div>
+
+<div id="mobileMenuDrawer" class="fixed inset-0 z-40 hidden md:hidden">
+    <div onclick="toggleMobileMenu()" class="absolute inset-0 bg-black/10 dark:bg-black/40 backdrop-blur-[4px] opacity-0 transition-opacity duration-500" id="mobileMenuBackdrop"></div>
+    
+    <div class="absolute bottom-[90px] left-4 right-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-white/20 dark:border-slate-700 rounded-[32px] p-6 shadow-2xl transform translate-y-[120%] transition-transform duration-500 ease-spring" id="mobileMenuSheet">
+        
+        <div class="grid grid-cols-4 gap-4 mb-6">
+            <button onclick="showPage('loans')" class="flex flex-col items-center gap-2 group mobile-stagger">
+                <div class="w-12 h-12 rounded-2xl bg-debt/10 dark:bg-indigo-900/30 text-debt dark:text-indigo-400 flex items-center justify-center text-xl group-active:scale-90 transition-transform"><i class="fa-solid fa-hand-holding-dollar"></i></div>
+                <span class="text-[9px] font-bold text-slate-500">Loans</span>
+            </button>
+            
+            <button onclick="showPage('dreams')" class="flex flex-col items-center gap-2 group mobile-stagger">
+                <div class="w-12 h-12 rounded-2xl bg-dream/10 dark:bg-amber-900/30 text-dream dark:text-amber-400 flex items-center justify-center text-xl group-active:scale-90 transition-transform"><i class="fa-solid fa-bullseye"></i></div>
+                <span class="text-[9px] font-bold text-slate-500">Dreams</span>
+            </button>
+            
+            <button onclick="showPage('autopay')" class="flex flex-col items-center gap-2 group mobile-stagger">
+                <div class="w-12 h-12 rounded-2xl bg-mintPrimary/10 dark:bg-teal-900/30 text-mintPrimary dark:text-teal-400 flex items-center justify-center text-xl group-active:scale-90 transition-transform"><i class="fa-solid fa-bolt"></i></div>
+                <span class="text-[9px] font-bold text-slate-500">AutoPay</span>
+            </button>
+
+             <button onclick="openCategoryModal(); toggleMobileMenu(true)" class="flex flex-col items-center gap-2 group mobile-stagger">
+                <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-500 flex items-center justify-center text-xl group-active:scale-90 transition-transform"><i class="fa-solid fa-tags"></i></div>
+                <span class="text-[9px] font-bold text-slate-500 truncate w-full text-center">Categories</span>
+            </button>
+        </div>
+
+        <div class="h-px bg-slate-100 dark:bg-slate-700/50 w-full mb-6"></div>
+
+        <div class="grid grid-cols-4 gap-4">
+            <button onclick="exportData(); toggleMobileMenu()" class="flex flex-col items-center gap-2 group mobile-stagger">
+                <div class="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 flex items-center justify-center group-active:scale-90 transition-transform"><i class="fa-solid fa-cloud-arrow-down"></i></div>
+                <span class="text-[9px] font-bold text-slate-400">Backup</span>
+            </button>
+
+            <button onclick="document.getElementById('restoreFile').click(); toggleMobileMenu()" class="flex flex-col items-center gap-2 group mobile-stagger">
+                <div class="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 flex items-center justify-center group-active:scale-90 transition-transform"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                <span class="text-[9px] font-bold text-slate-400">Restore</span>
+            </button>
+
+            <button onclick="toggleTheme(); toggleMobileMenu()" class="flex flex-col items-center gap-2 group mobile-stagger">
+                <div class="w-10 h-10 rounded-full bg-slate-50 dark:bg-slate-800 text-amber-400 flex items-center justify-center group-active:scale-90 transition-transform"><i class="fa-solid fa-sun dark:hidden"></i><i class="fa-solid fa-moon hidden dark:block"></i></div>
+                <span class="text-[9px] font-bold text-slate-400">Theme</span>
+            </button>
+
+            <button onclick="logout()" class="flex flex-col items-center gap-2 group mobile-stagger">
+                <div class="w-10 h-10 rounded-full bg-rose-50 dark:bg-rose-900/20 text-rose-500 flex items-center justify-center group-active:scale-90 transition-transform"><i class="fa-solid fa-power-off"></i></div>
+                <span class="text-[9px] font-bold text-slate-400">Exit</span>
+            </button>
+        </div>
+        
+        <div class="mt-8 text-center opacity-60 hover:opacity-100 transition-opacity cursor-pointer" onclick="openModal('creditsModal'); toggleMobileMenu(true)">
+            <p class="text-[9px] text-slate-400 uppercase tracking-widest font-bold mb-1">Architect</p>
+            <div class="signature-container">
+                <span class="text-2xl font-signature text-mintPrimary dark:text-teal-400">Roushan</span>
+            </div>
+        </div>
+    </div>
+</div>
+        </main>
+    </div>
+
+    <div id="txModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[70] items-end md:items-center justify-center p-0 md:p-4 transition-opacity duration-300 opacity-0">
+    
+    <div class="bg-white dark:bg-slate-800 rounded-t-[32px] md:rounded-3xl w-full max-w-lg shadow-2xl transform transition-all duration-300 translate-y-full md:translate-y-0 md:scale-95 flex flex-col max-h-[90vh]">
+        
+        <div class="px-6 py-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-700">
+            <h3 class="font-bold text-lg text-slate-800 dark:text-white">New Transaction</h3>
+            <button onclick="closeModal('txModal')" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-500"><i class="fa-solid fa-times"></i></button>
+        </div>
+
+        <form id="txForm" onsubmit="saveTransaction(event)" class="p-6 space-y-5 overflow-y-auto hide-scrollbar">
+            <input type="hidden" name="txId" id="txId">
+            
+            <div class="switch-toggle-3 mb-2">
+                <input type="radio" id="type-expense" name="type" value="expense" checked onchange="toggleTxType()">
+                <label for="type-expense">Expense</label>
+                <input type="radio" id="type-income" name="type" value="income" onchange="toggleTxType()">
+                <label for="type-income">Income</label>
+                <input type="radio" id="type-transfer" name="type" value="transfer" onchange="toggleTxType()">
+                <label for="type-transfer">Transfer</label>
+                <div class="slider"></div>
+            </div>
+
+            <div class="relative amount-group">
+                <div class="float-label-group">
+                    <input type="number" name="amount" id="amountInput" required placeholder=" " class="text-2xl font-bold pl-10" step="any">
+                    <label>Amount</label>
+                    <span class="currency-symbol">₹</span>
+                </div>
+            </div>
+
+            <div class="float-label-group">
+                <input type="text" name="desc" id="descInput" required placeholder=" ">
+                <label>Description</label>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="accountSelectors">
+                <div class="float-label-group">
+                    <select name="accountId" id="fromAccountSelect" required></select>
+                    <label id="fromAccountLabel">From</label>
+                </div>
+                <div class="float-label-group hidden" id="toAccountDiv">
+                    <select name="toAccountId" id="toAccountSelect"></select>
+                    <label>To</label>
+                </div>
+                <div class="float-label-group" id="categoryDiv">
+                    <select name="category" id="catSelect"></select>
+                    <label>Category</label>
+                </div>
+            </div>
+
+            <div class="float-label-group date-group">
+                <input type="date" name="date" required id="dateInput" placeholder=" ">
+                <label>Date</label>
+                <i class="fa-solid fa-calendar input-icon"></i>
+            </div>
+
+            <div class="pt-2">
+                <button type="button" onclick="document.getElementById('moreTxDetails').classList.toggle('hidden')" class="text-xs font-bold text-slate-500 flex items-center gap-1 hover:text-mintPrimary transition-colors">
+                    <i class="fa-solid fa-sliders"></i> Add Details (Payee, Tags, Notes)
+                </button>
+                <div id="moreTxDetails" class="hidden space-y-4 mt-4 animate-fade-in-down">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="float-label-group"><input type="text" name="txPayee" placeholder=" "><label>Payee / Payer</label></div>
+                        <div class="float-label-group"><input type="text" name="txRef" placeholder=" "><label>Ref ID</label></div>
+                    </div>
+                    <div class="float-label-group"><input type="text" name="txTags" placeholder=" "><label>Tags</label></div>
+                    <div class="float-label-group"><textarea name="txNotes" placeholder=" " rows="2"></textarea><label>Notes</label></div>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-slate-900 dark:bg-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg active:scale-95 transition-transform">Save</button>
+        </form>
+    </div>
+</div>
+
+    <div id="subModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[70] md:items-center justify-center p-0 md:p-4 items-end transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-slate-800 rounded-t-3xl md:rounded-3xl w-full max-w-md overflow-hidden shadow-2xl mobile-sheet transform transition-all duration-300 translate-y-full opacity-0 scale-95">
+            <div class="bg-slate-50 dark:bg-slate-700 px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 dark:text-white">New Subscription</h3>
+                <button onclick="closeModal('subModal')" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form id="subForm" onsubmit="saveSubscription(event)" class="p-6 space-y-4" novalidate>
+                <div class="float-label-group"><input type="text" name="subName" required placeholder=" "><label>Service Name</label></div>
+                <div class="flex gap-3">
+                    <div class="flex-1 amount-group">
+                        <div class="float-label-group"><input type="number" name="subAmount" required placeholder=" "><label>Amount</label><span class="currency-symbol">₹</span></div>
+                    </div>
+                    <div class="w-32 float-label-group"><select name="subFreq"><option value="Monthly">Monthly</option><option value="Yearly">Yearly</option></select><label>Freq</label></div>
+                </div>
+                <div class="float-label-group"><select name="subAccountId" id="subAccountSelect" required></select><label>Pay From</label></div>
+                <div class="float-label-group date-group"><input type="date" name="subDate" required placeholder=" "><label>Due Date</label><i class="fa-solid fa-calendar input-icon"></i></div>
+                <button type="submit" class="w-full bg-slate-900 dark:bg-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg">Save</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="sipModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[70] md:items-center justify-center p-0 md:p-4 items-end transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-slate-800 rounded-t-3xl md:rounded-3xl w-full max-w-md overflow-hidden shadow-2xl mobile-sheet transform transition-all duration-300 translate-y-full opacity-0 scale-95">
+            <div class="bg-growthLight dark:bg-green-900/40 px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-growth dark:text-green-400">Add Asset</h3>
+                <button onclick="closeModal('sipModal')" class="w-8 h-8 rounded-full bg-white dark:bg-slate-600 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form id="sipForm" onsubmit="saveSip(event)" class="p-6 space-y-4" novalidate>
+                <div class="float-label-group"><input type="text" name="sipName" required placeholder=" "><label>Asset Name</label></div>
+                <div class="flex gap-3">
+                    <div class="flex-1 float-label-group"><select name="sipCategory"><option value="Mutual Fund">Mutual Fund</option><option value="Stock">Stock</option><option value="Gold">Gold</option><option value="Real Estate">Real Estate</option><option value="Crypto">Crypto</option></select><label>Category</label></div>
+                    <div class="flex-1 float-label-group"><select name="sipType" id="sipTypeSelect" onchange="toggleSipFields()"><option value="SIP">Monthly SIP</option><option value="OneTime">One-Time Buy</option></select><label>Type</label></div>
+                </div>
+                <div id="stockFields" class="hidden flex gap-3">
+                    <div class="flex-1 float-label-group"><input type="number" id="sipQty" name="sipQty" step="any" oninput="calcSipTotal()" placeholder=" "><label>Qty</label></div>
+                    <div class="flex-1 amount-group"><div class="float-label-group"><input type="number" id="sipPrice" name="sipPrice" step="any" oninput="calcSipTotal()" placeholder=" "><label>Price</label><span class="currency-symbol">₹</span></div></div>
+                </div>
+                <div class="amount-group"><div class="float-label-group"><input type="number" id="sipTotalAmount" name="sipAmount" required placeholder=" "><label>Total Amount</label><span class="currency-symbol">₹</span></div></div>
+                <div class="float-label-group"><select name="sipAccountId" id="sipAccountSelect" required></select><label>Pay From</label></div>
+                <div class="float-label-group date-group"><input type="date" name="buyDate" id="buyDate" placeholder=" "><label>Purchase Date</label><i class="fa-solid fa-calendar input-icon"></i></div>
+                <button type="submit" class="w-full bg-growth text-white font-bold py-4 rounded-2xl shadow-lg">Add Asset</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="loanModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[70] md:items-center justify-center p-0 md:p-4 items-end transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-slate-800 rounded-t-3xl md:rounded-3xl w-full max-w-md overflow-hidden shadow-2xl mobile-sheet transform transition-all duration-300 translate-y-full opacity-0 scale-95">
+            <div class="bg-debtLight dark:bg-indigo-900/40 px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-debt dark:text-indigo-400">Add Loan</h3>
+                <button onclick="closeModal('loanModal')" class="w-8 h-8 rounded-full bg-white dark:bg-slate-600 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form id="loanForm" onsubmit="saveLoan(event)" class="p-6 space-y-4" novalidate>
+                <div class="float-label-group"><input type="text" name="loanName" required placeholder=" "><label>Loan Name</label></div>
+                <div class="amount-group"><div class="float-label-group"><input type="number" id="loanPrincipal" name="loanPrincipal" required oninput="calcLoanPreview()" placeholder=" "><label>Principal</label><span class="currency-symbol">₹</span></div></div>
+                <div class="flex gap-3">
+                    <div class="flex-1 float-label-group"><input type="number" id="loanRate" name="loanRate" required step="0.1" oninput="calcLoanPreview()" placeholder=" "><label>Interest (%)</label></div>
+                    <div class="flex-1 float-label-group"><input type="number" id="loanTenure" name="loanTenure" required oninput="calcLoanPreview()" placeholder=" "><label>Months</label></div>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-700 p-4 rounded-xl text-center"><p class="text-xs text-slate-500 font-bold uppercase">Estimated EMI</p><p class="text-2xl font-extrabold text-debt dark:text-indigo-400" id="previewEMI">₹0</p><p class="text-[10px] text-slate-400" id="previewTotal">Total Repayment: ₹0</p></div>
+                <button type="submit" class="w-full bg-debt text-white font-bold py-4 rounded-2xl shadow-lg">Start Tracking</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="dreamModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[70] md:items-center justify-center p-0 md:p-4 items-end transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-slate-800 rounded-t-3xl md:rounded-3xl w-full max-w-md overflow-hidden shadow-2xl mobile-sheet transform transition-all duration-300 translate-y-full opacity-0 scale-95">
+            <div class="bg-dreamLight dark:bg-amber-900/40 px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-dream dark:text-amber-400">New Dream</h3>
+                <button onclick="closeModal('dreamModal')" class="w-8 h-8 rounded-full bg-white dark:bg-slate-600 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form id="dreamForm" onsubmit="saveDream(event)" class="p-6 space-y-4" novalidate>
+                <div class="float-label-group"><input type="text" name="dreamName" required placeholder=" "><label>Goal Name</label></div>
+                <div class="amount-group"><div class="float-label-group"><input type="number" name="dreamTarget" required placeholder=" "><label>Target Amount</label><span class="currency-symbol">₹</span></div></div>
+                <button type="submit" class="w-full bg-dream text-white font-bold py-4 rounded-2xl shadow-lg">Create Goal</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="accountModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[70] md:items-center justify-center p-0 md:p-4 items-end transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-slate-800 rounded-t-3xl md:rounded-3xl w-full max-w-md overflow-hidden shadow-2xl mobile-sheet transform transition-all duration-300 translate-y-full opacity-0 scale-95">
+            <div class="bg-slate-50 dark:bg-slate-700 px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 dark:text-white">Add Wallet</h3>
+                <button onclick="closeModal('accountModal')" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form id="accountForm" onsubmit="saveAccount(event)" class="p-6 space-y-4" novalidate>
+                <div class="float-label-group"><input type="text" name="accName" required placeholder=" "><label>Wallet Name</label></div>
+                <div class="float-label-group"><select name="accType"><option value="Cash">Cash</option><option value="Bank">Bank</option><option value="Credit Card">Credit Card</option><option value="Wallet">Digital Wallet</option></select><label>Type</label></div>
+                <div class="amount-group"><div class="float-label-group"><input type="number" name="accBalance" required placeholder=" "><label>Balance</label><span class="currency-symbol">₹</span></div></div>
+                <button type="submit" class="w-full bg-slate-900 dark:bg-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg">Create</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="budgetModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[70] md:items-center justify-center p-0 md:p-4 items-end transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-slate-800 rounded-t-3xl md:rounded-3xl w-full max-w-md overflow-hidden shadow-2xl mobile-sheet transform transition-all duration-300 translate-y-full opacity-0 scale-95">
+            <div class="bg-slate-50 dark:bg-slate-700 px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-slate-800 dark:text-white">Set Budget</h3>
+                <button onclick="closeModal('budgetModal')" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form onsubmit="saveBudget(event)" class="p-6 space-y-4" novalidate>
+                <div class="amount-group"><div class="float-label-group"><input type="number" id="budgetInput" name="budgetAmount" required placeholder=" "><label>Limit</label><span class="currency-symbol">₹</span></div></div>
+                <button type="submit" class="w-full bg-slate-900 dark:bg-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg">Set Budget</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="manageCategoriesModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[70] md:items-center justify-center p-0 md:p-4 items-end transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-slate-800 rounded-t-3xl md:rounded-3xl w-full max-w-md overflow-hidden shadow-2xl mobile-sheet flex flex-col max-h-[80vh] transform transition-all duration-300 translate-y-full opacity-0 scale-95">
+            <div class="bg-slate-50 dark:bg-slate-700 px-6 py-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-600">
+                <h3 class="font-bold text-slate-800 dark:text-white">Manage Categories</h3>
+                <button onclick="closeModal('manageCategoriesModal')" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="p-4 space-y-4">
+                <form onsubmit="addCategory(event)" class="flex gap-2">
+                    <div class="float-label-group flex-1"><input type="text" name="newCatName" placeholder=" " required><label>New Category</label></div>
+                    <button type="submit" class="bg-slate-900 dark:bg-teal-600 text-white px-4 rounded-2xl font-bold w-14 h-16 flex items-center justify-center"><i class="fa-solid fa-plus"></i></button>
+                </form>
+                <div class="space-y-2 overflow-y-auto max-h-[50vh] pr-2" id="categoryList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="walletDetailsModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[70] md:items-center justify-center p-0 md:p-4 items-end transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-slate-800 rounded-t-3xl md:rounded-3xl w-full max-w-md overflow-hidden shadow-2xl mobile-sheet transform transition-all duration-300 translate-y-full opacity-0 scale-95">
+            <div class="bg-slate-50 dark:bg-slate-700/50 px-6 py-4 flex justify-between items-center border-b border-slate-100 dark:border-slate-600">
+                <h3 class="font-bold text-slate-800 dark:text-white" id="walletModalTitle">Wallet Details</h3>
+                <button onclick="closeModal('walletDetailsModal')" class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-600 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="p-6 space-y-6">
+                <input type="hidden" id="editWalletId">
+                <div class="space-y-3">
+    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Wallet Name</label>
+    <div class="flex gap-2">
+        <div class="float-label-group flex-1">
+            <input type="text" id="editWalletName" placeholder=" ">
+            <label>Name</label>
+        </div>
+        <button onclick="saveWalletName()" class="mt-1 h-[3.5rem] w-[3.5rem] flex-shrink-0 bg-mintPrimary dark:bg-teal-500 hover:bg-mintDark dark:hover:bg-teal-600 text-white rounded-2xl shadow-sm flex items-center justify-center transition-all active:scale-95">
+            <i class="fa-solid fa-check text-lg"></i>
+        </button>
+    </div>
+</div>
+                <div class="space-y-3">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Calibrate Balance</label>
+                    <div class="p-4 bg-slate-50 dark:bg-slate-700/30 rounded-2xl border border-slate-100 dark:border-slate-600 space-y-3">
+                        <div class="flex justify-between text-sm"><span class="text-slate-500">Current:</span><span class="font-bold text-slate-800 dark:text-white" id="editWalletCurrentBalance">₹0</span></div>
+                        <div class="amount-group"><div class="float-label-group"><input type="number" id="newWalletBalance" placeholder=" "><label>Actual Balance</label><span class="currency-symbol">₹</span></div></div>
+                        <button onclick="saveWalletBalance()" class="w-full py-3 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 font-bold rounded-xl text-sm">Update</button>
+                    </div>
+                </div>
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-700">
+                    <button onclick="softDeleteWallet()" class="w-full flex items-center justify-center gap-2 text-rose-500 bg-rose-50 dark:bg-rose-900/20 py-4 rounded-2xl font-bold transition-all"><i class="fa-solid fa-trash"></i> Archive Wallet</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="paySubModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[70] md:items-center justify-center p-0 md:p-4 items-end transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-slate-800 rounded-t-3xl md:rounded-3xl w-full max-w-md overflow-hidden shadow-2xl mobile-sheet transform transition-all duration-300 translate-y-full opacity-0 scale-95">
+            <div class="bg-mintLight dark:bg-teal-900/40 px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-mintPrimary dark:text-teal-400">Pay Bill</h3>
+                <button onclick="closeModal('paySubModal')" class="w-8 h-8 rounded-full bg-white dark:bg-slate-600 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form id="paySubForm" onsubmit="confirmSubPayment(event)" class="p-6 space-y-4" novalidate>
+                <input type="hidden" id="paySubId" name="subId">
+                <div class="text-center mb-2"><p class="text-lg font-bold text-slate-800 dark:text-white" id="paySubName">Service</p><p class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase mt-1">Due: <span id="paySubDue">Date</span></p></div>
+                <div class="amount-group"><div class="float-label-group"><input type="number" id="paySubAmount" name="amount" required placeholder=" "><label>Amount</label><span class="currency-symbol">₹</span></div></div>
+                <div class="float-label-group"><select name="accountId" id="paySubAccountSelect" required></select><label>Pay From Wallet</label></div>
+                <button type="submit" class="w-full bg-mintPrimary dark:bg-teal-600 text-white font-bold py-4 rounded-2xl shadow-lg">Confirm Payment</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="sellAssetModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[70] md:items-center justify-center p-0 md:p-4 items-end transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-slate-800 rounded-t-3xl md:rounded-3xl w-full max-w-md overflow-hidden shadow-2xl mobile-sheet transform transition-all duration-300 translate-y-full opacity-0 scale-95">
+            <div class="bg-growthLight dark:bg-green-900/40 px-6 py-4 flex justify-between items-center border-b border-green-100 dark:border-green-900/50">
+                <div><h3 class="font-bold text-growth dark:text-green-400">Sell Asset</h3><p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase" id="sellAssetName">Name</p></div>
+                <button onclick="closeModal('sellAssetModal')" class="w-8 h-8 rounded-full bg-white dark:bg-slate-600 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form id="sellAssetForm" onsubmit="processSell(event)" class="p-6 space-y-6" novalidate>
+                <input type="hidden" id="sellAssetId" name="assetId">
+                <input type="hidden" id="sellAssetType" name="assetType">
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-2xl">
+                        <p class="text-[10px] uppercase text-slate-400 font-bold">Held Qty</p>
+                        <p class="text-lg font-bold text-slate-800 dark:text-white" id="sellAvailableQty">0</p>
+                    </div>
+                    <div class="bg-slate-50 dark:bg-slate-700/50 p-3 rounded-2xl">
+                        <p class="text-[10px] uppercase text-slate-400 font-bold">Current Mkt Value</p>
+                        <p class="text-lg font-bold text-growth dark:text-green-400" id="sellCurrentValue">₹0</p>
+                    </div>
+                </div>
+
+                <div id="sellQtyContainer" class="space-y-4">
+                    <div class="float-label-group">
+                        <input type="number" id="sellQtyInput" name="sellQty" step="any" placeholder=" " oninput="calculateSellTotal()">
+                        <label>Units to Sell</label>
+                    </div>
+                    <div class="amount-group">
+                        <div class="float-label-group">
+                            <input type="number" id="sellPriceInput" name="sellPrice" step="any" placeholder=" " oninput="calculateSellTotal()">
+                            <label>Selling Price (Per Unit)</label>
+                            <span class="currency-symbol">₹</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sellAmountContainer" class="hidden">
+                    <div class="amount-group">
+                        <div class="float-label-group">
+                            <input type="number" id="sellAmountInput" name="sellAmount" step="any" placeholder=" " oninput="calculateSellTotal()">
+                            <label>Total Withdrawal Amount</label>
+                            <span class="currency-symbol">₹</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center p-4 bg-growthLight dark:bg-green-900/20 rounded-2xl">
+                    <span class="text-sm font-bold text-growth dark:text-green-400">Total Receive</span>
+                    <span class="text-2xl font-extrabold text-growth dark:text-green-400" id="sellTotalDisplay">₹0</span>
+                </div>
+
+                <button type="submit" class="w-full bg-growth dark:bg-green-600 text-white font-bold py-4 rounded-2xl shadow-lg">Confirm Sale</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="repayModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[70] md:items-center justify-center p-0 md:p-4 items-end transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-slate-800 rounded-t-3xl md:rounded-3xl w-full max-w-md overflow-hidden shadow-2xl mobile-sheet transform transition-all duration-300 translate-y-full opacity-0 scale-95">
+            <div class="bg-debtLight dark:bg-indigo-900/40 px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-debt dark:text-indigo-400">Repay Loan</h3>
+                <button onclick="closeModal('repayModal')" class="w-8 h-8 rounded-full bg-white dark:bg-slate-600 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form id="repayForm" onsubmit="confirmRepayment(event)" class="p-6 space-y-4" novalidate>
+                <input type="hidden" id="repayLoanId" name="loanId">
+                <p class="text-sm text-slate-500 font-bold text-center mb-2" id="repayTitle">Paying EMI for...</p>
+                <div class="float-label-group"><select name="repayAccountId" id="repayAccountSelect" required></select><label>Pay From</label></div>
+                <div class="amount-group"><div class="float-label-group"><input type="number" id="repayAmount" name="amount" required placeholder=" "><label>Amount</label><span class="currency-symbol">₹</span></div></div>
+                <button type="submit" class="w-full bg-debt text-white font-bold py-4 rounded-2xl shadow-lg">Confirm Payment</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="contributeModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[70] md:items-center justify-center p-0 md:p-4 items-end transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-slate-800 rounded-t-3xl md:rounded-3xl w-full max-w-md overflow-hidden shadow-2xl mobile-sheet transform transition-all duration-300 translate-y-full opacity-0 scale-95">
+            <div id="contributeHeader" class="bg-dreamLight dark:bg-amber-900/40 px-6 py-4 flex justify-between items-center transition-colors">
+                <h3 class="font-bold text-dream dark:text-amber-400" id="contributeModalLabel">Update Goal</h3>
+                <button onclick="closeModal('contributeModal')" class="w-8 h-8 rounded-full bg-white dark:bg-slate-600 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form id="contributeForm" onsubmit="saveContribution(event)" class="p-6 space-y-5" novalidate>
+                <input type="hidden" id="contributeId" name="dreamId"><input type="hidden" id="dreamTypeInput" name="dreamType">
+                <div class="text-center mb-2"><p class="text-lg font-bold text-slate-800 dark:text-white" id="contributeTitle">Goal</p><p class="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mt-1">Saved: <span id="dreamAvailable">₹0</span></p></div>
+                <div class="amount-group"><div class="float-label-group"><input type="number" name="amount" required placeholder=" "><label>Amount</label><span class="currency-symbol">₹</span></div></div>
+                <div class="float-label-group"><select name="accountId" id="contributeAccountSelect" required></select><label id="contributeAccountLabel">From Wallet</label></div>
+                <button type="submit" id="contributeSubmitBtn" class="w-full bg-emerald-600 text-white font-bold py-4 rounded-2xl shadow-lg">Confirm</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[200] items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-sm p-6 text-center shadow-2xl transform transition-all duration-300 scale-95">
+            <div class="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-900/20 text-rose-500 flex items-center justify-center text-2xl mx-auto mb-4 animate-bounce"><i class="fa-solid fa-triangle-exclamation"></i></div>
+            <h3 class="text-xl font-bold mb-2 text-slate-800 dark:text-white">Are you sure?</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium" id="confirmMessage">This action cannot be undone.</p>
+            <div class="flex gap-3">
+                <button onclick="closeModal('confirmModal')" class="flex-1 py-3 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 transition-colors">Cancel</button>
+                <button id="confirmBtn" class="flex-1 py-3 bg-rose-500 text-white font-bold rounded-xl shadow-lg hover:bg-rose-600 active:scale-95 transition-all">Yes, Delete</button>
+            </div>
+        </div>
+    </div>
+
+<div id="backupModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[200] items-center justify-center p-4 transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-slate-800 rounded-[32px] w-full max-w-sm p-8 text-center shadow-2xl transform transition-all duration-300 scale-95 border border-slate-100 dark:border-slate-700">
+            <div class="w-16 h-16 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-500 flex items-center justify-center text-3xl mx-auto mb-5 animate-bounce">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="text-xl font-extrabold mb-2 text-slate-800 dark:text-white">Living Dangerously?</h3>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mb-8 font-medium leading-relaxed">
+                You haven't backed up in over <span class="text-amber-500 font-bold">7 days</span>. 
+                <br>
+                If you clear your cache today, all your wealth data vanishes. Just saying.
+            </p>
+            <div class="flex flex-col gap-3">
+                <button onclick="performBackupFromModal()" class="w-full py-4 bg-slate-900 dark:bg-teal-600 text-white font-bold rounded-2xl shadow-lg hover:scale-105 transition-transform flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> Backup Now
+                </button>
+                <button onclick="closeModal('backupModal')" class="text-xs font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 py-2">
+                    I like the risk (Skip)
+                </button>
+            </div>
+        </div>
+    </div>
+
+<div id="updateAssetModal" class="fixed inset-0 bg-black/40 backdrop-blur-md hidden z-[70] md:items-center justify-center p-0 md:p-4 items-end transition-opacity duration-300 opacity-0">
+        <div class="bg-white dark:bg-slate-800 rounded-t-3xl md:rounded-3xl w-full max-w-md overflow-hidden shadow-2xl mobile-sheet transform transition-all duration-300 translate-y-full opacity-0 scale-95">
+            <div class="bg-indigo-50 dark:bg-indigo-900/40 px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-indigo-600 dark:text-indigo-400">Update Value</h3>
+                <button onclick="closeModal('updateAssetModal')" class="w-8 h-8 rounded-full bg-white dark:bg-slate-600 text-slate-500 flex items-center justify-center"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <form id="updateAssetForm" onsubmit="saveAssetUpdate(event)" class="p-6 space-y-4" novalidate>
+                <input type="hidden" id="updateAssetId" name="assetId">
+                <input type="hidden" id="updateAssetType" name="assetType">
+                
+                <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-700/50 p-3 rounded-xl mb-2">
+                    <span class="text-xs font-bold text-slate-500">Invested:</span>
+                    <span class="font-bold text-slate-800 dark:text-white" id="updateInvestedDisplay">₹0</span>
+                </div>
+
+                <div id="updatePriceField" class="hidden">
+                    <div class="amount-group">
+                        <div class="float-label-group">
+                            <input type="number" name="newPrice" step="any" placeholder=" ">
+                            <label>Current Price (Per Unit)</label>
+                            <span class="currency-symbol">₹</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="updateValueField" class="hidden">
+                    <div class="amount-group">
+                        <div class="float-label-group">
+                            <input type="number" name="newValue" step="any" placeholder=" ">
+                            <label>Current Total Value</label>
+                            <span class="currency-symbol">₹</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-4 rounded-2xl shadow-lg">Update Portfolio</button>
+            </form>
+        </div>
+    </div>
+
+<div id="creditsModal" class="fixed inset-0 bg-black/60 backdrop-blur-xl hidden z-[100] items-center justify-center p-4 transition-opacity duration-500 opacity-0" onclick="if(event.target === this) closeModal('creditsModal')">
+    <div class="bg-white/95 dark:bg-slate-900/95 rounded-[32px] w-full max-w-md shadow-2xl overflow-hidden border border-white/20 dark:border-slate-700/50 transform transition-all duration-500 scale-95 relative flex flex-col max-h-[85vh]">
+        
+        <div class="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-mintPrimary/20 rounded-full blur-[80px] pointer-events-none"></div>
+
+        <div class="p-6 md:p-8 relative z-10 text-center space-y-6 md:space-y-8 overflow-y-auto hide-scrollbar">
+            
+            <h2 class="text-xs font-black tracking-[0.3em] text-slate-400 uppercase mb-1">Credits</h2>
+
+            <div>
+                <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white mb-3">The Reason This Exists</h3>
+                
+                <div class="hero-card p-5 md:p-6 rounded-[2rem] text-left group cursor-default relative overflow-hidden shadow-xl shadow-mintPrimary/10">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><i class="fa-solid fa-crown text-6xl md:text-7xl"></i></div>
+                    
+                    <div class="flex flex-col items-start gap-3 mb-4 relative z-10">
+                        <div class="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-mintPrimary text-white flex items-center justify-center shadow-lg shadow-mintPrimary/30">
+                            <i class="fa-solid fa-lightbulb text-base md:text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl md:text-3xl font-extrabold text-slate-800 dark:text-white leading-none mb-1">
+                                <span class="rg-glow">R</span>aushan <span class="rg-glow">G</span>upta
+                            </h3>
+                            <p class="text-[10px] md:text-xs font-bold text-mintPrimary uppercase tracking-widest bg-mintLight dark:bg-teal-900/30 px-3 py-1 rounded-full inline-block border border-mintPrimary/20 mt-2">The Founder</p>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-4 text-xs md:text-sm font-medium text-slate-600 dark:text-slate-300 relative z-10 leading-relaxed">
+                        <p>
+                            RG Wealth started because Raushan thought,
+                            <span class="italic font-bold text-slate-800 dark:text-white">“Managing expenses shouldn’t feel like a punishment.”</span>
+                        </p>
+                        <p>
+                            He came up with the idea, built the foundation, wrote the core code, and shaped what this website is meant to be.
+                        </p>
+                        <p>
+                            The logic, structure, and first working version? <strong class="text-slate-800 dark:text-white">All him.</strong>
+                        </p>
+                        <p>
+                            If the site feels practical, focused, and actually useful instead of flashy for no reason — that’s Raushan doing things his way.
+                        </p>
+                        <p class="text-[10px] md:text-xs text-slate-400 italic mt-2">
+                            Also yes, the name RG Wealth is exactly what it sounds like.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-lg md:text-xl font-bold text-slate-800 dark:text-white mb-3">The Side Quest</h3>
+                
+                <div class="bg-slate-50/80 dark:bg-slate-800/50 p-5 md:p-6 rounded-3xl border border-slate-100 dark:border-slate-700 text-left relative overflow-hidden group hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                     <div class="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity"><i class="fa-solid fa-ghost text-5xl md:text-6xl"></i></div>
+
+                    <div class="flex items-center gap-3 mb-4 relative z-10">
+                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-500 flex items-center justify-center">
+                            <i class="fa-solid fa-screwdriver-wrench text-xs md:text-sm"></i>
+                        </div>
+                        <h3 class="text-lg md:text-xl font-bold text-slate-700 dark:text-white leading-none">PK</h3>
+                    </div>
+                    
+                    <div class="space-y-3 text-xs md:text-sm font-medium text-slate-500 dark:text-slate-400 relative z-10 leading-relaxed">
+                        <p>
+                            PK joined later and chose the classic side-quest path:
+                        </p>
+                        <ul class="list-disc pl-4 space-y-1 marker:text-slate-300">
+                            <li>polish the design</li>
+                            <li>smooth the animations</li>
+                            <li>add a few features</li>
+                            <li>fix a lot of tiny things</li>
+                            <li>and quietly disappear.</li>
+                        </ul>
+                        <p class="pt-2">
+                            No plot twists.<br>
+                            No main-character energy.<br>
+                            Just making sure everything feels better than it did yesterday.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-6 border-t border-slate-100 dark:border-slate-800/50 space-y-4">
+                <h4 class="font-black tracking-[0.2em] text-[10px] text-slate-300 uppercase">Post-Credits Scene</h4>
+                
+                <p class="text-[10px] md:text-xs font-medium text-slate-500 italic">
+                    Built with ideas, trial and error, and several “okay this works now” moments.
+                    <br>
+                    Still growing, still improving, still counting expenses correctly (mostly).
+                </p>
+
+                <div class="pt-4 flex flex-col gap-1">
+                    <p class="text-[9px] font-bold uppercase text-slate-400">Created by Raushan Gupta</p>
+                    <p class="text-[9px] font-bold uppercase text-slate-500 dark:text-slate-600">Refined by PK</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+    <script src="app.js"></script>
+</body>
+</html>

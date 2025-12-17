@@ -1,0 +1,661 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    /* ✨ GLASS VARIABLES (Porcelain Look) */
+    --glass-surface: rgba(255, 255, 255, 0.65); 
+    --glass-border: none; 
+    --glass-shadow: none;
+    
+    /* 🎨 BRAND COLORS */
+    --primary-mint: #0d9488;
+    
+    /* 🚀 PHYSICS ENGINE */
+    /* 1. INTERACTIVE: Subtle deceleration for buttons (The "Apple Feel") */
+    --ease-spring: cubic-bezier(0.25, 1, 0.5, 1); 
+    
+    /* 2. LAYOUT: Smooth slide for Sidebar (NO BOUNCE) */
+    --ease-slide: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark {
+    --glass-surface: rgba(15, 23, 42, 0.6);
+}
+
+body { 
+    font-family: 'Inter', sans-serif; 
+    -webkit-tap-highlight-color: transparent;
+    background-color: #f0fdfa; 
+    color: #334155;
+    overflow-x: hidden;
+}
+.dark body {
+    background-color: #020617; 
+    color: #e2e8f0;
+}
+
+/* =========================================
+   🌊 BACKGROUND MESH (Ambient Blobs)
+   ========================================= */
+
+.bg-mesh {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+    overflow: hidden;
+}
+
+.bg-mesh::before, .bg-mesh::after {
+    content: ''; position: absolute; border-radius: 50%;
+    filter: blur(80px); 
+    animation: float 20s infinite alternate ease-in-out;
+    opacity: 0.6;
+}
+
+.bg-mesh::before { width: 60vw; height: 60vw; top: -10%; left: -10%; background: #5eead4; animation-delay: 0s; }
+.bg-mesh::after { width: 50vw; height: 50vw; bottom: -10%; right: -10%; background: #c7d2fe; animation-delay: -5s; }
+
+.dark .bg-mesh::before { background: #115e59; opacity: 0.4; }
+.dark .bg-mesh::after { background: #312e81; opacity: 0.4; }
+
+@keyframes float {
+    0% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(30px, -20px) scale(1.1); }
+    100% { transform: translate(-20px, 20px) scale(0.9); }
+}
+
+/* =========================================
+   🧊 MAIN GLASS CONTAINERS (Static)
+   ========================================= */
+
+.floating-panel, main {
+    background: var(--glass-surface);
+    border: var(--glass-border);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    box-shadow: var(--glass-shadow);
+    border-radius: 24px;
+}
+
+/* =========================================
+   🍬 INTERACTIVE ELEMENTS (Subtle Physics)
+   ========================================= */
+
+button, input, select, textarea, .account-card, .interactive {
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    cursor: pointer;
+    transition: transform 0.4s var(--ease-spring), filter 0.3s ease, background-color 0.3s ease;
+}
+
+/* HOVER: The "Pop" Effect (Scale Up) */
+button:hover, .account-card:hover, .interactive:hover {
+    transform: scale(1.03); /* This makes it grow nicely */
+    filter: brightness(1.05);
+    z-index: 10;
+}
+
+/* ACTIVE: The "Squish" Effect */
+button:active, .account-card:active, .interactive:active { 
+    transform: scale(0.95); 
+    filter: brightness(0.95);
+    transition-duration: 0.1s;
+}
+
+/* Button Colors */
+.bg-slate-900, .bg-mintPrimary, .dark .bg-teal-600 { background: rgba(13, 148, 136, 0.15) !important; backdrop-filter: blur(10px); color: #0f766e !important; font-weight: 800; }
+.dark .bg-slate-900, .dark .bg-mintPrimary, .dark .bg-teal-600 { background: rgba(45, 212, 191, 0.15) !important; color: #5eead4 !important; }
+
+.bg-rose-500 { background: rgba(244, 63, 94, 0.15) !important; color: #be123c !important; }
+.dark .bg-rose-500 { background: rgba(251, 113, 133, 0.15) !important; color: #fda4af !important; }
+
+.bg-growth, .bg-emerald-600 { background: rgba(16, 185, 129, 0.15) !important; color: #047857 !important; }
+.dark .bg-growth, .dark .bg-emerald-600 { background: rgba(52, 211, 153, 0.15) !important; color: #d1fae5 !important; }
+
+.bg-debt, .bg-indigo-600 { background: rgba(99, 102, 241, 0.15) !important; color: #4338ca !important; }
+.dark .bg-debt, .dark .bg-indigo-600 { background: rgba(129, 140, 248, 0.15) !important; color: #e0e7ff !important; }
+
+/* =========================================
+   🃏 CARD SYSTEM (Strict Logic)
+   ========================================= */
+
+.mint-card { background: rgba(255, 255, 255, 0.4); border: var(--glass-border); border-radius: 24px; }
+.dark .mint-card { background: rgba(30, 41, 59, 0.3); }
+
+/* WALLET SCROLL FIX */
+.account-scroll {
+    display: flex; overflow-x: auto; gap: 1rem; 
+    /* Increased top padding so floating cards don't get clipped */
+    padding: 1rem 0.5rem 1.5rem 0.5rem; 
+    scroll-snap-type: x mandatory;
+}
+.account-card {
+    flex: 0 0 280px; scroll-snap-align: center;
+    background: rgba(255, 255, 255, 0.5); 
+    border-radius: 24px; padding: 1.5rem;
+    position: relative; overflow: hidden;
+}
+.dark .account-card { background: rgba(30, 41, 59, 0.5); }
+
+/* =========================================
+   🏎️ ADVANCED ANIMATIONS
+   ========================================= */
+
+.page-section { 
+    opacity: 0; transform: translateY(10px) scale(0.99); display: none; 
+    transition: opacity 0.4s ease, transform 0.5s var(--ease-spring); 
+}
+.page-section.active { display: block; }
+.page-section.visible { opacity: 1; transform: translateY(0) scale(1); }
+
+.stagger-item { opacity: 0; animation: springUp 0.6s var(--ease-spring) forwards; }
+@keyframes springUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+.modal-content { animation: modalPop 0.4s var(--ease-spring) forwards; }
+@keyframes modalPop { 0% { opacity: 0; transform: translateY(20px) scale(0.96); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* =========================================
+   📝 INPUTS - "BREATHING" FOCUS
+   ========================================= */
+
+.float-label-group { position: relative; width: 100%; margin-top: 4px; }
+.float-label-group input, .float-label-group textarea, .custom-select-trigger { width: 100%; background-color: rgba(0, 0, 0, 0.03); border: none; border-radius: 16px; transition: all 0.4s var(--ease-spring); padding: 1.6rem 1rem 0.6rem 1rem; height: 3.5rem; font-weight: 700; color: #334155; font-size: 1rem; cursor: text; }
+.dark .float-label-group input, .dark .float-label-group textarea, .dark .custom-select-trigger { background-color: rgba(255, 255, 255, 0.05); color: #f1f5f9; }
+
+.float-label-group input:focus, .custom-select-wrapper.open .custom-select-trigger { background-color: rgba(255, 255, 255, 0.6); box-shadow: 0 4px 15px rgba(13, 148, 136, 0.1); transform: scale(1.005); }
+.dark .float-label-group input:focus, .dark .custom-select-wrapper.open .custom-select-trigger { background-color: rgba(30, 41, 59, 0.8); box-shadow: 0 4px 15px rgba(45, 212, 191, 0.1); }
+
+.float-label-group label { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; transition: all 0.4s var(--ease-spring); font-weight: 600; font-size: 0.85rem; z-index: 5; }
+/* --- FLOATING LABEL LOGIC --- */
+.float-label-group input:focus ~ label, 
+.float-label-group input:not(:placeholder-shown) ~ label,
+.custom-select-wrapper.has-value ~ label, /* Triggers when value selected */
+.custom-select-wrapper.open ~ label {     /* Triggers when menu opens */
+    top: 0.8rem; 
+    transform: translateY(-50%) scale(0.85); 
+    color: #0d9488; 
+    transform-origin: left center;
+}
+.dark .float-label-group input:focus ~ label, 
+.dark .float-label-group input:not(:placeholder-shown) ~ label,
+.dark .custom-select-wrapper.has-value ~ label,
+.dark .custom-select-wrapper.open ~ label { 
+    color: #5eead4; 
+}
+.dark .float-label-group input:focus ~ label, .dark .float-label-group input:not(:placeholder-shown) ~ label { color: #5eead4; }
+
+/* ICONS & FIXES */
+input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; } input[type=number] { -moz-appearance: textfield; } 
+.date-group { position: relative; } .date-group input { padding-left: 2.8rem; } .date-group label { left: 2.8rem; } .date-group .input-icon { position: absolute; left: 1rem; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; color: #64748b; font-weight: 800; font-size: 1.2rem; pointer-events: none; z-index: 6; padding-top: 14px; } .date-group input:focus ~ label, .date-group input:not(:placeholder-shown) ~ label { left: 1rem; }
+.amount-group { position: relative; } .amount-group input { padding-left: 1rem !important; padding-right: 2.5rem !important; background-color: rgba(0, 0, 0, 0.03); } .dark .amount-group input { background-color: rgba(255, 255, 255, 0.05); } .amount-group label { left: 1rem !important; } .amount-group .currency-symbol { position: absolute; right: 1rem; left: auto; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; color: #64748b; font-weight: 800; font-size: 1.2rem; pointer-events: none; z-index: 6; padding-top: 14px; }
+
+/* CUSTOM SELECT */
+.custom-select-wrapper select { display: none; } .custom-select-wrapper { position: relative; width: 100%; margin-bottom: 0; } .custom-select-trigger { display: flex; align-items: center; justify-content: space-between; cursor: pointer; } .custom-select-trigger::after { content: '\f078'; font-family: "Font Awesome 6 Free"; font-weight: 900; font-size: 0.8rem; color: #94a3b8; transition: transform 0.3s; margin-left: 10px; } .custom-select-wrapper.open .custom-select-trigger::after { transform: rotate(180deg); color: #0d9488; }
+.custom-options { position: absolute; top: 110%; left: 0; right: 0; background: var(--glass-surface); border-radius: 16px; backdrop-filter: blur(25px); z-index: 1000; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.3s var(--ease-spring); max-height: 250px; overflow-y: auto; } .custom-select-wrapper.open .custom-options { opacity: 1; visibility: visible; transform: translateY(0); } .custom-option { padding: 1rem; font-weight: 600; color: #475569; cursor: pointer; transition: all 0.2s; border-bottom: 1px solid rgba(0,0,0,0.05); } .dark .custom-option { color: #cbd5e1; border-color: rgba(255,255,255,0.05); } .custom-option:last-child { border-bottom: none; } .custom-option:hover { background: rgba(13, 148, 136, 0.1); color: #0d9488; padding-left: 1.25rem; } .custom-option.selected { background: rgba(13, 148, 136, 0.2); color: #0d9488; }
+
+/* TOGGLE & SIDEBAR */
+.switch-toggle-3 { position: relative; display: flex; background: rgba(0,0,0,0.05); border-radius: 16px; padding: 4px; height: 50px; margin-bottom: 1rem; } .dark .switch-toggle-3 { background: rgba(255,255,255,0.05); } .switch-toggle-3 input { display: none; } .switch-toggle-3 label { flex: 1; display: flex; align-items: center; justify-content: center; z-index: 2; cursor: pointer; font-weight: 700; font-size: 0.75rem; color: #64748b; transition: color 0.3s; text-transform: uppercase; letter-spacing: 0.05em; } .switch-toggle-3 .slider { position: absolute; top: 4px; left: 4px; bottom: 4px; width: calc(33.33% - 4px); background: white; border-radius: 12px; transition: transform 0.4s var(--ease-spring); z-index: 1; } .dark .switch-toggle-3 .slider { background: #334155; } #type-expense:checked ~ .slider { transform: translateX(0%); } #type-income:checked ~ .slider { transform: translateX(100%); } #type-transfer:checked ~ .slider { transform: translateX(200%); } #type-expense:checked + label { color: #f43f5e; } #type-income:checked + label { color: #10b981; } #type-transfer:checked + label { color: #3b82f6; }
+
+/* SIDEBAR FIX (Smooth Slide + No Wrap) */
+aside { transition: width 0.35s var(--ease-slide); } /* Use Slide curve */
+aside.collapsed { width: 6rem; }
+.sidebar-text { white-space: nowrap; transition: opacity 0.2s ease; } /* Prevent wrap */
+aside.collapsed .sidebar-text, aside.collapsed #sidebarLogoText { display: none; opacity: 0; }
+aside.collapsed .sidebar-header { justify-content: center; padding-left: 0; padding-right: 0; }
+aside.collapsed .sidebar-grid { grid-template-columns: 1fr; }
+aside.collapsed #desktopNav button { justify-content: center; padding: 0.75rem; }
+aside.collapsed #desktopNav button i { margin: 0; }
+aside.collapsed #sidebarToggle i { transform: rotate(180deg); }
+.nav-active { background-color: rgba(13, 148, 136, 0.15); color: #0d9488 !important; border-radius: 12px; } .dark .nav-active { background-color: rgba(45, 212, 191, 0.15); color: #5eead4 !important; border: none; } .nav-active i { color: #0d9488; } .dark .nav-active i { color: #5eead4; }
+
+/* =========================================
+   📱 MOBILE NAV: THE GLASS DOCK (Heavy Frost)
+   ========================================= */
+
+.mobile-nav-island { 
+    position: fixed; 
+    bottom: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 80px; 
+    
+    /* 🧊 THE RECIPE FOR REAL FROST */
+    /* 1. We need a milkier background color to "catch" the blur */
+    background: rgba(255, 255, 255, 0.75);
+    
+    /* 2. Standard Blur + Saturation to make colors pop */
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px); /* Vital for iPhone */
+    
+    /* 3. Crisp white border on top */
+    border-top: 1px solid rgba(255, 255, 255, 0.8);
+    
+    border-radius: 24px 24px 0 0; 
+    padding: 0 20px 10px 20px; 
+    z-index: 50; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    
+    box-shadow: 0 -5px 30px rgba(0,0,0,0.05);
+}
+
+.dark .mobile-nav-island { 
+    /* Dark Frost */
+    background: rgba(15, 23, 42, 0.75); 
+    border-top: 1px solid rgba(255,255,255,0.1); 
+    box-shadow: 0 -5px 30px rgba(0,0,0,0.4);
+    
+    /* Dark mode needs less saturation, more blur */
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+/* The Big Action Button (Flush & Styled) */
+.mobile-fab { 
+    width: 56px; /* Slightly smaller to fit inside */
+    height: 56px; 
+    border-radius: 20px; /* Soft Squircle */
+    background: #0f172a; 
+    color: white; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    font-size: 1.25rem; 
+    
+    /* NO Pop-out - sits flush */
+    transform: none; 
+    border: none; 
+    
+    /* Highlight using Shadow */
+    box-shadow: 0 8px 20px -6px rgba(15, 23, 42, 0.5);
+    transition: transform 0.2s var(--ease-spring), box-shadow 0.2s ease;
+}
+
+.dark .mobile-fab { 
+    background: #0d9488; 
+    color: white;
+    box-shadow: 0 8px 20px -6px rgba(13, 148, 136, 0.5);
+}
+
+/* Interaction Effects */
+.mobile-fab:active { 
+    transform: scale(0.92); /* Just shrinks slightly */
+    box-shadow: 0 2px 10px -2px rgba(0,0,0,0.3);
+}
+
+/* Keep these standard nav item styles */
+.mobile-nav-island .nav-item {
+    padding: 10px;
+    opacity: 0.6;
+    transition: all 0.3s ease;
+}
+
+.mobile-nav-island .nav-item:active {
+    opacity: 1;
+    transform: scale(0.9);
+}
+
+.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } .input-error { box-shadow: inset 0 0 0 2px #f43f5e !important; animation: shake 0.4s linear; } @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+/* --- CUSTOM CALENDAR BASE --- */
+.flatpickr-calendar { 
+    width: 320px !important; 
+    background: var(--glass-surface) !important; 
+    backdrop-filter: blur(25px) !important; 
+    -webkit-backdrop-filter: blur(25px) !important; 
+    border-radius: 24px !important; 
+    padding: 16px !important; 
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important; 
+    font-family: 'Inter', sans-serif !important; 
+    margin-top: 10px !important; 
+    z-index: 99999 !important; 
+    border: 1px solid rgba(255,255,255,0.5) !important; 
+} 
+
+/* --- MOBILE CALENDAR TWEAKS --- */
+@media (max-width: 480px) {
+    .flatpickr-calendar {
+        width: 300px !important; /* Fits nicely on small screens */
+        left: 50% !important;    /* Force Center */
+        transform: translateX(-50%) !important; 
+    }
+}
+
+.dark .flatpickr-calendar { 
+    background: rgba(15, 23, 42, 0.95) !important; 
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important; 
+    border: 1px solid rgba(255,255,255,0.1) !important;
+}
+.flatpickr-calendar::before, .flatpickr-calendar::after { display: none !important; } .flatpickr-months { position: relative !important; height: 50px !important; background: transparent !important; margin-bottom: 15px !important; display: flex !important; align-items: center !important; justify-content: center !important; } .flatpickr-prev-month, .flatpickr-next-month { position: absolute !important; top: 50% !important; transform: translateY(-50%) !important; width: 36px !important; height: 36px !important; z-index: 100 !important; background: rgba(0,0,0,0.04) !important; border-radius: 12px !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important; margin: 0 !important; transition: all 0.2s ease !important; } .flatpickr-prev-month { left: 10px !important; } .flatpickr-next-month { right: 10px !important; } .dark .flatpickr-prev-month, .dark .flatpickr-next-month { background: rgba(255,255,255,0.1) !important; } .flatpickr-prev-month:hover, .flatpickr-next-month:hover { background: #0d9488 !important; transform: translateY(-50%) scale(1.1) !important; } .flatpickr-prev-month:hover svg, .flatpickr-next-month:hover svg { fill: white !important; } .flatpickr-prev-month svg, .flatpickr-next-month svg { width: 12px !important; height: 12px !important; fill: #64748b !important; } .flatpickr-current-month { position: relative !important; width: auto !important; left: auto !important; right: auto !important; padding: 0 !important; margin: 0 !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; gap: 6px !important; transform: none !important; pointer-events: none !important; } .flatpickr-monthDropdown-months { appearance: none !important; -webkit-appearance: none !important; border: none !important; background: transparent !important; pointer-events: none !important; font-size: 1.25rem !important; font-weight: 800 !important; color: #0f172a !important; padding: 0 !important; margin: 0 !important; width: auto !important; } .dark .flatpickr-monthDropdown-months { color: #f1f5f9 !important; } .numInputWrapper { width: auto !important; display: flex !important; } .numInputWrapper input.cur-year { pointer-events: auto !important; font-family: 'Inter', sans-serif !important; font-size: 1.25rem !important; font-weight: 400 !important; color: #64748b !important; border: none !important; background: transparent !important; padding: 0 !important; margin: 0 !important; width: 55px !important; text-align: left !important; } .dark .numInputWrapper input.cur-year { color: #94a3b8 !important; } .numInputWrapper span { display: none !important; } .flatpickr-weekdays { display: flex; margin-bottom: 10px; } span.flatpickr-weekday { flex: 1; text-align: center; color: #94a3b8; font-size: 0.75rem; font-weight: 700; } .flatpickr-days { width: 100% !important; } .dayContainer { width: 100% !important; min-width: 100% !important; max-width: 100% !important; justify-content: space-between !important; } .flatpickr-day { max-width: 14.28% !important; height: 38px !important; line-height: 38px !important; border-radius: 12px !important; color: #334155 !important; font-weight: 600 !important; margin-top: 4px !important; } .dark .flatpickr-day { color: #cbd5e1 !important; } .flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay { color: #cbd5e1 !important; opacity: 0.5 !important; pointer-events: none !important; } .dark .flatpickr-day.prevMonthDay, .dark .flatpickr-day.nextMonthDay { color: #475569 !important; opacity: 0.4 !important; } .flatpickr-day.selected { background: #0d9488 !important; color: white !important; box-shadow: none !important; } .flatpickr-day:not(.prevMonthDay):not(.nextMonthDay):hover { background: #f0fdfa !important; color: #0d9488 !important; } .dark .flatpickr-day:not(.prevMonthDay):not(.nextMonthDay):hover { background: #134e4a !important; color: #2dd4bf !important; }
+
+/* --- CREDITS GLOW --- */
+.rg-glow {
+    color: #0d9488;
+    text-shadow: 0 0 15px rgba(13, 148, 136, 0.6);
+    font-weight: 800;
+}
+.dark .rg-glow {
+    color: #5eead4;
+    text-shadow: 0 0 15px rgba(94, 234, 212, 0.6);
+}
+
+/* --- HERO CARD ANIMATIONS --- */
+.hero-card {
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.1) 0%, rgba(255, 255, 255, 0.5) 100%);
+    border: 1px solid rgba(13, 148, 136, 0.2);
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+}
+.dark .hero-card {
+    background: linear-gradient(135deg, rgba(13, 148, 136, 0.2) 0%, rgba(15, 23, 42, 0.6) 100%);
+    border: 1px solid rgba(45, 212, 191, 0.2);
+}
+
+/* Hover Effect: Lift & Glow */
+.hero-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 20px 40px -10px rgba(13, 148, 136, 0.3);
+    border-color: rgba(13, 148, 136, 0.5);
+}
+
+/* Shimmer Line */
+.hero-card::after {
+    content: "";
+    position: absolute;
+    top: 0; left: -100%; width: 50%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+    transform: skewX(-20deg);
+    transition: 0.5s;
+    pointer-events: none;
+}
+.hero-card:hover::after { left: 150%; transition: 1s ease-in-out; }
+
+/* Side Character Card */
+.side-card {
+    opacity: 0.8;
+    transform: scale(0.98);
+    transition: all 0.3s ease;
+}
+.side-card:hover {
+    opacity: 1;
+    transform: scale(1);
+    background: rgba(99, 102, 241, 0.1);
+}
+
+/* --- ERROR ANIMATION --- */
+.animate-shake {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+}
+
+/* Ensure the shake keyframes are robust */
+@keyframes shake {
+    10%, 90% { transform: translate3d(-1px, 0, 0); }
+    20%, 80% { transform: translate3d(2px, 0, 0); }
+    30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+    40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+/* =========================================
+   📱 MOBILE SUPER MENU (New Additions)
+   ========================================= */
+
+/* 1. Active State for Bottom Bar Icons (Squircle Shape) */
+/* 1. Active State: Container Fades In (No Bounce) */
+.mobile-nav-island .nav-item.nav-active {
+    color: #0d9488 !important; /* Mint Text */
+    background: rgba(13, 148, 136, 0.15); /* Mint Background */
+    border-radius: 16px; 
+    
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0; 
+    
+    /* Smooth fade for the background */
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.dark .mobile-nav-island .nav-item.nav-active {
+    color: #5eead4 !important; 
+    background: rgba(45, 212, 191, 0.15); 
+}
+
+/* 2. The Bounce is ONLY on the Icon now */
+.mobile-nav-island .nav-item.nav-active i {
+    /* Quick, subtle snap */
+    animation: iconBounce 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes iconBounce {
+    0% { transform: scale(0.5); opacity: 0.5; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* 2. The Drawer Logic (Open/Close) */
+#mobileMenuDrawer.open {
+    display: block; /* Unhide container */
+}
+
+/* When .open is added, animate the backdrop */
+#mobileMenuDrawer.open #mobileMenuBackdrop {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* When .open is added, slide the sheet up */
+#mobileMenuDrawer.open #mobileMenuSheet {
+    transform: translateY(0);
+}
+
+/* 3. Icon Stagger Animation (The "Pop" Effect) */
+/* Initially hidden */
+.mobile-stagger {
+    opacity: 0;
+    transform: translateY(15px) scale(0.9);
+}
+
+/* When drawer is open, trigger animation */
+#mobileMenuDrawer.open .mobile-stagger {
+    animation: iconPop 0.5s var(--ease-spring) forwards;
+}
+
+@keyframes iconPop {
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Add delays so they don't all appear at once */
+#mobileMenuDrawer.open .mobile-stagger:nth-child(1) { animation-delay: 0.05s; }
+#mobileMenuDrawer.open .mobile-stagger:nth-child(2) { animation-delay: 0.1s; }
+#mobileMenuDrawer.open .mobile-stagger:nth-child(3) { animation-delay: 0.15s; }
+#mobileMenuDrawer.open .mobile-stagger:nth-child(4) { animation-delay: 0.2s; }
+#mobileMenuDrawer.open .mobile-stagger:nth-child(5) { animation-delay: 0.25s; }
+#mobileMenuDrawer.open .mobile-stagger:nth-child(6) { animation-delay: 0.3s; }
+#mobileMenuDrawer.open .mobile-stagger:nth-child(7) { animation-delay: 0.35s; }
+#mobileMenuDrawer.open .mobile-stagger:nth-child(8) { animation-delay: 0.4s; }
+
+/* 4. Glass Sheet Polish */
+#mobileMenuSheet {
+    /* Ensure it sits above the fab */
+    z-index: 60; 
+    /* Subtle shadow for depth */
+    box-shadow: 0 -10px 40px -10px rgba(0,0,0,0.1);
+    /* Push it up so it sits nicely above the new dock height */
+    margin-bottom: 20px; 
+}
+
+.dark #mobileMenuSheet {
+    box-shadow: 0 -10px 40px -10px rgba(0,0,0,0.5);
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+/* --- SLIDING SEGMENTED CONTROL --- */
+.sliding-tab-container {
+    position: relative;
+    background-color: rgba(0,0,0,0.05); /* Light gray track */
+    border-radius: 12px;
+    padding: 4px;
+}
+.dark .sliding-tab-container {
+    background-color: rgba(255,255,255,0.05);
+}
+
+.sliding-pill {
+    position: absolute;
+    top: 4px; left: 4px; bottom: 4px;
+    width: calc(50% - 4px); /* Exact half width minus padding */
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); /* Spring effect */
+    z-index: 1;
+}
+.dark .sliding-pill {
+    background: #334155; /* Slate-700 */
+}
+
+.tab-btn {
+    position: relative;
+    z-index: 2;
+    flex: 1;
+    font-size: 0.75rem;
+    font-weight: 700;
+    transition: color 0.2s ease;
+}
+/* Active/Inactive colors managed by JS */
+
+/* =========================================
+   📱 MOBILE BACKGROUND BLOBS (Prominent & Cozy)
+   ========================================= */
+
+@media (max-width: 768px) {
+    .bg-mesh::before {
+        /* TOP LEFT: Vivid Mint */
+        width: 130vw;       
+        height: 100vw;
+        top: -15%;
+        left: -40%;
+        background: #14b8a6; /* Teal-500 (Stronger Mint) */
+        opacity: 0.65;       /* Much more visible */
+        filter: blur(65px);  
+    }
+
+    .bg-mesh::after {
+        /* BOTTOM RIGHT: Deep Cozy Purple */
+        width: 130vw;
+        height: 110vw;
+        bottom: -15%;
+        right: -40%;
+        background: #8b5cf6; /* Violet-500 (Vibrant Purple) */
+        opacity: 0.6;        /* High visibility */
+        filter: blur(65px);
+    }
+
+    /* 🌙 DARK MODE MOBILE BLOBS (Glowing) */
+    .dark .bg-mesh::before { 
+        background: #0f766e; /* Teal-700 */
+        opacity: 0.6; 
+    }
+    .dark .bg-mesh::after { 
+        background: #5b21b6; /* Violet-800 */
+        opacity: 0.6; 
+    }
+}
+
+/* =========================================
+   ☁️ MOBILE VAPOR FADE (30px Precision)
+   ========================================= */
+
+#mainContainer {
+    /* The fade completes at exactly 30px */
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 30px, black 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 30px, black 100%);
+}
+
+.mobile-header-frost {
+    background: transparent !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    pointer-events: none;
+    z-index: 50;
+}
+
+/* =========================================
+   📱 MOBILE WALLET CARDS (Frosted Ceramic)
+   ========================================= */
+
+@media (max-width: 768px) {
+    .account-card {
+        /* 1. CERAMIC BODY: Much more solid (75%) */
+        background: rgba(255, 255, 255, 0.75) !important;
+        
+        /* 2. HEAVY BLUR: Smooths out the blob colors behind it */
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+
+        /* 3. RIM LIGHT: Crisp white border to separate from background */
+        border: 1px solid rgba(255, 255, 255, 0.9) !important;
+
+        /* 4. ELEVATION: Soft shadow to lift it 5mm up */
+        box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    /* 🌙 DARK MODE CERAMIC */
+    .dark .account-card {
+        /* Dark Slate Body */
+        background: rgba(30, 41, 59, 0.75) !important;
+        
+        /* Subtle Rim Light */
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        
+        /* Deep Shadow */
+        box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4) !important;
+    }
+}
+
+/* =========================================
+       📱 MOBILE MINT CARDS (Budget, Charts, etc.)
+       ========================================= */
+    
+    .mint-card {
+        /* Matching the Ceramic Wallet Style */
+        background: rgba(255, 255, 255, 0.75) !important;
+        
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+
+        border: 1px solid rgba(255, 255, 255, 0.9) !important;
+        
+        /* Same lift, but slightly tighter since these cards are usually stacked */
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    /* 🌙 DARK MODE CERAMIC */
+    .dark .mint-card {
+        background: rgba(30, 41, 59, 0.75) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.4) !important;
+    }
+
+/* =========================================
+   📊 ANALYTICS CHART ANIMATIONS
+   ========================================= */
+
+/* The base state for both charts */
+.chart-anim-wrapper {
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* The "Invisible" state (Hidden) */
+.chart-exit {
+    opacity: 0 !important;
+    transform: scale(0.95) translateY(10px) !important;
+    /* We use absolute positioning during transition to stop layout jumping */
+    pointer-events: none; 
+}
